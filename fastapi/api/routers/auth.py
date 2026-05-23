@@ -19,13 +19,16 @@ router = APIRouter(
 SECRET_KEY = os.getenv('AUTH_SECRET_KEY')
 ALGORITHM = os.getenv('AUTH_ALGORITHM')
 
+
 class UserCreateRequest(BaseModel):
     username: str
     password: str
 
+
 class Token(BaseModel):
     access_token: str
     token_type: str
+
 
 def authenticate_user(username: str, password: str, db):
     user = db.query(User).filter(User.username == username).first()
@@ -35,11 +38,13 @@ def authenticate_user(username: str, password: str, db):
         return False
     return user
 
+
 def create_access_token(username: str, user_id: int, expires_delta: timedelta):
     encode = {"sub": username, "user_id": user_id}
     expire = datetime.now(timezone.utc) + expires_delta
     encode.update({"exp": expire})
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
+
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_user(db: db_dependency, create_user_request: UserCreateRequest):
@@ -50,12 +55,15 @@ async def create_user(db: db_dependency, create_user_request: UserCreateRequest)
     db.add(create_user_model)
     db.commit()
 
+
 @router.post('/token', response_model=Token)
-async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
+async def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: db_dependency,
+):
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user')
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail='Could not validate user')
     token = create_access_token(user.username, user.id, timedelta(minutes=29))
     return {'access_token': token, 'token_type': 'bearer'}
-
-
