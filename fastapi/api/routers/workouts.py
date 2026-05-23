@@ -10,19 +10,22 @@ router = APIRouter(
     tags=['workouts']
 )
 
+
 class WorkoutBase(BaseModel):
     name: str
     description: Optional[str] = None
+
 
 class WorkoutCreate(WorkoutBase):
     pass
 
 
-@router.get('/all')  
+@router.get('/all')
 def get_workouts(db: db_dependency, user: user_dependency):
     return db.query(Workout).options(joinedload(Workout.routines)).filter(
         Workout.user_id == user.get('id')  # ← only fetch own workouts
     ).all()
+
 
 @router.get('/{workout_id}')
 def get_workout(db: db_dependency, user: user_dependency, workout_id: int):

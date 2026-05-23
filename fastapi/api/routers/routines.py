@@ -10,9 +10,11 @@ router = APIRouter(
     tags=['routines']
 )
 
+
 class RoutineBase(BaseModel):
     name: str
     description: Optional[str] = None
+
 
 class RoutineCreate(RoutineBase):
     workout_ids: List[int] = []  # ← was List[list], should be list of ints
@@ -39,10 +41,13 @@ def get_routine(db: db_dependency, user: user_dependency, routine_id: int):
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
 def create_routine(db: db_dependency, user: user_dependency, routine: RoutineCreate):
-    db_routine = Routine(name=routine.name, description=routine.description, user_id=user.get('id'))
+    db_routine = Routine(
+        name=routine.name, description=routine.description, user_id=user.get('id'))
 
-    for workout_id in routine.workout_ids:          # ← was Routine.Workout (wrong model/case)
-        workout = db.query(Workout).filter(Workout.id == workout_id).first()  # ← was shadowing Workout class with variable
+    # ← was Routine.Workout (wrong model/case)
+    for workout_id in routine.workout_ids:
+        # ← was shadowing Workout class with variable
+        workout = db.query(Workout).filter(Workout.id == workout_id).first()
         if workout:
             db_routine.workouts.append(workout)
 

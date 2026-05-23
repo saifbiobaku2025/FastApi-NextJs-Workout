@@ -15,12 +15,14 @@ ALGORITHM = os.getenv("AUTH_ALGORITHM")
 
 print(f"SECRET_KEY: {SECRET_KEY}, ALGORITHM: {ALGORITHM}")
 
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
 
 db_dependency = Annotated[Session, Depends(get_db)]
 
@@ -32,13 +34,14 @@ oauth2_bearer_dependency = Annotated[str, Depends(oauth2_bearer)]
 async def get_current_user(token: oauth2_bearer_dependency):  # ← added token param
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get('sub')   
-        user_id: int = payload.get('user_id')    
-        if username is None or user_id is None: 
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user')
+        username: str = payload.get('sub')
+        user_id: int = payload.get('user_id')
+        if username is None or user_id is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail='Could not validate user')
         return {'username': username, 'id': user_id}
     except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user')
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail='Could not validate user')
 
 user_dependency = Annotated[dict, Depends(get_current_user)]
-    
