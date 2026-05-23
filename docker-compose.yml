@@ -1,0 +1,19 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      no_cache: true
+    container_name: workout-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: sqlite:////data/workout_app.db
+    volumes:
+      - workout_data:/data
+    restart: unless-stopped
+
+volumes:
+  workout_data:
