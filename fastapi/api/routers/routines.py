@@ -44,9 +44,7 @@ def create_routine(db: db_dependency, user: user_dependency, routine: RoutineCre
     db_routine = Routine(
         name=routine.name, description=routine.description, user_id=user.get('id'))
 
-    # ← was Routine.Workout (wrong model/case)
     for workout_id in routine.workout_ids:
-        # ← was shadowing Workout class with variable
         workout = db.query(Workout).filter(Workout.id == workout_id).first()
         if workout:
             db_routine.workouts.append(workout)
