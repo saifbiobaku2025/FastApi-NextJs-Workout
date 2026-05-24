@@ -1,0 +1,30 @@
+name: Pytest
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pytest
+        working-directory: fastapi
+        run: pytest --junitxml=pytest-report.xml -v
+        continue-on-error: true
+
+      - name: Enforce 90% pass rate
+        run: python .github/scripts/check_test_pass_rate.py fastapi/pytest-report.xml 0.90
