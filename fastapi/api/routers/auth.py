@@ -14,6 +14,8 @@ from api.schemas import Token, UserCreate, UserRead
 
 load_dotenv()
 
+import os
+
 router = APIRouter(
     prefix="/auth",
     tags=["auth"],
