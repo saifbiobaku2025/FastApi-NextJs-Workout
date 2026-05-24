@@ -56,7 +56,7 @@ def registered_user(client):
     username = f"user_{os.urandom(4).hex()}"
     password = "testpassword123"
     response = client.post(
-        "/auth/",
+        "/auth",
         json={"username": username, "password": password},
     )
     assert response.status_code == 201

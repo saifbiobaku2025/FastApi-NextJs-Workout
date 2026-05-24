@@ -1,60 +1,55 @@
-from pydantic import BaseModel
-from typing import Optional
+from typing import List
+
 from fastapi import APIRouter, HTTPException, status
-from sqlalchemy.orm import joinedload
-from api.models import Workout
+from sqlalchemy.orm import Session
+
 from api.deps import db_dependency, user_dependency
+from api.models import Workout
+from api.schemas import WorkoutCreate, WorkoutRead
 
 router = APIRouter(
-    prefix='/workouts',
-    tags=['workouts']
+    prefix="/workouts",
+    tags=["workouts"],
 )
 
 
-class WorkoutBase(BaseModel):
-    name: str
-    description: Optional[str] = None
+def _workouts_for_user(db: Session, user_id: int) -> List[Workout]:
+    return db.query(Workout).filter(Workout.user_id == user_id).all()
 
 
-class WorkoutCreate(WorkoutBase):
-    pass
-
-
-@router.get('/all')
+@router.get("/workouts", response_model=List[WorkoutRead])
 def get_workouts(db: db_dependency, user: user_dependency):
-    return db.query(Workout).options(joinedload(Workout.routines)).filter(
-        Workout.user_id == user.get('id')  # ← only fetch own workouts
-    ).all()
+    return _workouts_for_user(db, user["id"])
 
 
-@router.get('/{workout_id}')
+@router.get("/{workout_id}", response_model=WorkoutRead)
 def get_workout(db: db_dependency, user: user_dependency, workout_id: int):
-    workout = db.query(Workout).options(joinedload(Workout.routines)).filter(
-        Workout.id == int(workout_id),
-        Workout.user_id == user.get('id')  # ← only fetch own workouts
+    workout = db.query(Workout).filter(
+        Workout.id == workout_id,
+        Workout.user_id == user["id"],
     ).first()
     if not workout:
-        raise HTTPException(status_code=404, detail='Workout not found')
+        raise HTTPException(status_code=404, detail="Workout not found")
     return workout
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=WorkoutRead, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=WorkoutRead, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def create_workout(db: db_dependency, user: user_dependency, workout: WorkoutCreate):
-    # ← removed redundant `if user is None` check; user_dependency already raises 401
-    db_workout = Workout(**workout.model_dump(), user_id=user.get('id'))
+    db_workout = Workout(**workout.model_dump(), user_id=user["id"])
     db.add(db_workout)
     db.commit()
     db.refresh(db_workout)
     return db_workout
 
 
-@router.delete('/', status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
 def delete_workout(db: db_dependency, user: user_dependency, workout_id: int):
     db_workout = db.query(Workout).filter(
         Workout.id == workout_id,
-        Workout.user_id == user.get('id')  # ← only delete own workouts
+        Workout.user_id == user["id"],
     ).first()
     if not db_workout:
-        raise HTTPException(status_code=404, detail='Workout not found')
+        raise HTTPException(status_code=404, detail="Workout not found")
     db.delete(db_workout)
     db.commit()
