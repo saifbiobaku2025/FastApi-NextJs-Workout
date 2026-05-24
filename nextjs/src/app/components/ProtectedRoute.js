@@ -5,23 +5,23 @@ import { useRouter } from "next/navigation";
 import AuthContext from "../context/AuthContext";
 
 const ProtectedRoute = ({ children }) => {
-    const { user, isAuthLoading } = useContext(AuthContext);
-    const router = useRouter();
+  const { user, isAuthLoading } = useContext(AuthContext);
+  const router = useRouter();
 
-    useEffect(() => {
-        if (isAuthLoading) {
-            return;
-        }
-        if (!user) {
-            router.push("/login");
-        }
-    }, [user, isAuthLoading, router]);
-
+  useEffect(() => {
     if (isAuthLoading) {
-        return null;
+      return;
     }
+    if (!user) {
+      router.push("/login");
+    }
+  }, [user, isAuthLoading, router]);
 
-    return user ? children : null;
+  if (isAuthLoading) {
+    return null;
+  }
+
+  return user ? children : null;
 };
 
 export default ProtectedRoute;
