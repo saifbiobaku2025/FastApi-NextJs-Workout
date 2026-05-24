@@ -6,7 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import axios from 'axios';
 
 const Home = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { user, logout, isAuthLoading } = useContext(AuthContext);
   const [workouts, setWorkouts] = useState([]);
   const [routines, setRoutines] = useState([]);
   const [workoutName, setWorkoutName] = useState('');
@@ -16,19 +16,15 @@ const Home = () => {
   const [selectedWorkouts, setSelectedWorkouts] = useState([]);
 
   useEffect(() => {
+    if (isAuthLoading || !user) {
+      return;
+    }
+
     const fetchWorkoutsAndRoutines = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          return;
-        }
         const [workoutsResponse, routinesResponse] = await Promise.all([
-          axios.get('http://localhost:8000/workouts/workouts', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get('http://localhost:8000/routines', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+          axios.get('http://localhost:8000/workouts/workouts'),
+          axios.get('http://localhost:8000/routines'),
         ]);
 
         setWorkouts(workoutsResponse.data);
@@ -39,7 +35,7 @@ const Home = () => {
     };
 
     fetchWorkoutsAndRoutines();
-  }, []);
+  }, [user, isAuthLoading]);
 
   const handleCreateWorkout = async (e) => {
     e.preventDefault();
@@ -62,8 +58,9 @@ const Home = () => {
       const response = await axios.post('http://localhost:8000/routines', {
         name: routineName,
         description: routineDescription,
-        workouts: selectedWorkouts,
+        workouts: selectedWorkouts.map(Number),
       });
+      setRoutines([...routines, response.data]);
       setRoutineName('');
       setRoutineDescription('');
       setSelectedWorkouts([]);
@@ -171,26 +168,23 @@ const Home = () => {
 
         <div>
           <h3>Your routines:</h3>
-          
-          <ul>
-          {routines.map(routine => (
+          <div className="d-flex flex-column gap-3">
+            {routines.map(routine => (
               <div className="card" key={routine.id}>
                 <div className="card-body">
-                <h5 className="card-title">{routine.name}</h5>
-                <p className="card-text">{routine.description}</p>
-                <ul className="card-text"> 
-                  {routine.workouts && routine.workouts.map(workout => (
-                    <li key={workout.id}>
-                      {workout.name}: {workout.description}
-                    </li>
-                  ))}
-                </ul>
-                
+                  <h5 className="card-title">{routine.name}</h5>
+                  <p className="card-text">{routine.description}</p>
+                  <ul className="card-text">
+                    {routine.workouts && routine.workouts.map(workout => (
+                      <li key={workout.id}>
+                        {workout.name}: {workout.description}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             ))}
-
-          </ul>
+          </div>
         </div>
       </div>
     </ProtectedRoute>
