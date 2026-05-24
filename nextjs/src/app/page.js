@@ -15,12 +15,13 @@ const Home = () => {
   const [routineDescription, setRoutineDescription] = useState('');
   const [selectedWorkouts, setSelectedWorkouts] = useState([]);
 
-  const token = localStorage.getItem('token');
-
   useEffect(() => {
     const fetchWorkoutsAndRoutines = async () => {
       try {
-        const token = localStorage.getItem('token'); 
+        const token = localStorage.getItem('token');
+        if (!token) {
+          return;
+        }
         const [workoutsResponse, routinesResponse] = await Promise.all([
           axios.get('http://localhost:8000/workouts/workouts', {
             headers: { Authorization: `Bearer ${token}` },
