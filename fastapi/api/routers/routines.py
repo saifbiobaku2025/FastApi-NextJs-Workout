@@ -1,51 +1,65 @@
-from pydantic import BaseModel
-from typing import Optional, List
+from typing import List
+
 from fastapi import APIRouter, HTTPException, status
-from sqlalchemy.orm import joinedload
-from api.models import Routine, Workout
+from sqlalchemy.orm import Session, joinedload
+
 from api.deps import db_dependency, user_dependency
+from api.models import Routine, Workout
+from api.schemas import RoutineCreate, RoutineRead
 
 router = APIRouter(
-    prefix='/routines',
-    tags=['routines']
+    prefix="/routines",
+    tags=["routines"],
 )
 
 
-class RoutineBase(BaseModel):
-    name: str
-    description: Optional[str] = None
+def _routines_for_user(db: Session, user_id: int) -> List[Routine]:
+    return (
+        db.query(Routine)
+        .options(joinedload(Routine.workouts))
+        .filter(Routine.user_id == user_id)
+        .all()
+    )
 
 
-class RoutineCreate(RoutineBase):
-    workout_ids: List[int] = []  # ← was List[list], should be list of ints
-
-
-@router.get('/')
+@router.get("", response_model=List[RoutineRead])
+@router.get("/", response_model=List[RoutineRead], include_in_schema=False)
 def get_routines(db: db_dependency, user: user_dependency):
-    # ← filter must be outside joinedload, joinedload only takes the relationship
-    return db.query(Routine).options(joinedload(Routine.workouts)).filter(
-        Routine.user_id == user.get('id')
-    ).all()
+    return _routines_for_user(db, user["id"])
 
 
-@router.get('/{routine_id}')
+@router.get("/{routine_id}", response_model=RoutineRead)
 def get_routine(db: db_dependency, user: user_dependency, routine_id: int):
-    routine = db.query(Routine).options(joinedload(Routine.workouts)).filter(
-        Routine.id == routine_id,
-        Routine.user_id == user.get('id')
-    ).first()
+    routine = (
+        db.query(Routine)
+        .options(joinedload(Routine.workouts))
+        .filter(Routine.id == routine_id, Routine.user_id == user["id"])
+        .first()
+    )
     if not routine:
-        raise HTTPException(status_code=404, detail='Routine not found')
+        raise HTTPException(status_code=404, detail="Routine not found")
     return routine
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=RoutineRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=RoutineRead,
+    status_code=status.HTTP_201_CREATED,
+    include_in_schema=False,
+)
 def create_routine(db: db_dependency, user: user_dependency, routine: RoutineCreate):
     db_routine = Routine(
-        name=routine.name, description=routine.description, user_id=user.get('id'))
+        name=routine.name,
+        description=routine.description,
+        user_id=user["id"],
+    )
 
-    for workout_id in routine.workout_ids:
-        workout = db.query(Workout).filter(Workout.id == workout_id).first()
+    for workout_id in routine.workouts:
+        workout = db.query(Workout).filter(
+            Workout.id == workout_id,
+            Workout.user_id == user["id"],
+        ).first()
         if workout:
             db_routine.workouts.append(workout)
 
@@ -53,20 +67,22 @@ def create_routine(db: db_dependency, user: user_dependency, routine: RoutineCre
     db.commit()
     db.refresh(db_routine)
 
-    # ← reload with joinedload so workouts are included in response
-    db_routine = db.query(Routine).options(joinedload(Routine.workouts)).filter(
-        Routine.id == db_routine.id
-    ).first()
-    return db_routine
+    loaded = (
+        db.query(Routine)
+        .options(joinedload(Routine.workouts))
+        .filter(Routine.id == db_routine.id)
+        .first()
+    )
+    return loaded
 
 
-@router.delete('/', status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
 def delete_routine(db: db_dependency, user: user_dependency, routine_id: int):
     db_routine = db.query(Routine).filter(
         Routine.id == routine_id,
-        Routine.user_id == user.get('id')  # ← only delete own routines
+        Routine.user_id == user["id"],
     ).first()
     if not db_routine:
-        raise HTTPException(status_code=404, detail='Routine not found')
+        raise HTTPException(status_code=404, detail="Routine not found")
     db.delete(db_routine)
     db.commit()

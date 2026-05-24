@@ -1,11 +1,11 @@
 def test_get_workouts_requires_auth(client):
-    response = client.get("/workouts/all")
+    response = client.get("/workouts/workouts")
     assert response.status_code == 401
 
 
 def test_create_and_list_workouts(client, auth_headers):
     create_response = client.post(
-        "/workouts/",
+        "/workouts",
         json={"name": "Bench Press", "description": "Chest day"},
         headers=auth_headers,
     )
@@ -14,8 +14,9 @@ def test_create_and_list_workouts(client, auth_headers):
     assert workout["name"] == "Bench Press"
     assert workout["description"] == "Chest day"
     assert workout["id"] is not None
+    assert set(workout.keys()) == {"id", "name", "description"}
 
-    list_response = client.get("/workouts/all", headers=auth_headers)
+    list_response = client.get("/workouts/workouts", headers=auth_headers)
     assert list_response.status_code == 200
     workouts = list_response.json()
     assert len(workouts) == 1
@@ -24,7 +25,7 @@ def test_create_and_list_workouts(client, auth_headers):
 
 def test_get_workout_by_id(client, auth_headers):
     create_response = client.post(
-        "/workouts/",
+        "/workouts",
         json={"name": "Squat", "description": "Leg day"},
         headers=auth_headers,
     )
@@ -43,7 +44,7 @@ def test_get_workout_not_found(client, auth_headers):
 
 def test_delete_workout(client, auth_headers):
     create_response = client.post(
-        "/workouts/",
+        "/workouts",
         json={"name": "Deadlift", "description": "Back day"},
         headers=auth_headers,
     )

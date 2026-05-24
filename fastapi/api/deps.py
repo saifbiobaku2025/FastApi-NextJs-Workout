@@ -13,8 +13,6 @@ load_dotenv()
 SECRET_KEY = os.getenv("AUTH_SECRET_KEY")
 ALGORITHM = os.getenv("AUTH_ALGORITHM")
 
-print(f"SECRET_KEY: {SECRET_KEY}, ALGORITHM: {ALGORITHM}")
-
 
 def get_db():
     db = SessionLocal()
@@ -27,7 +25,7 @@ def get_db():
 db_dependency = Annotated[Session, Depends(get_db)]
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/auth/token")
 oauth2_bearer_dependency = Annotated[str, Depends(oauth2_bearer)]
 
 

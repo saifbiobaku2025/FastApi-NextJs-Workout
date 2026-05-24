@@ -1,12 +1,12 @@
 def test_get_routines_requires_auth(client):
-    response = client.get("/routines/")
+    response = client.get("/routines")
     assert response.status_code == 401
 
 
 def test_create_and_list_routines(client, auth_headers):
     create_response = client.post(
-        "/routines/",
-        json={"name": "Push Day", "description": "Upper body", "workout_ids": []},
+        "/routines",
+        json={"name": "Push Day", "description": "Upper body", "workouts": []},
         headers=auth_headers,
     )
     assert create_response.status_code == 201
@@ -14,8 +14,9 @@ def test_create_and_list_routines(client, auth_headers):
     assert routine["name"] == "Push Day"
     assert routine["description"] == "Upper body"
     assert routine["workouts"] == []
+    assert set(routine.keys()) == {"id", "name", "description", "workouts"}
 
-    list_response = client.get("/routines/", headers=auth_headers)
+    list_response = client.get("/routines", headers=auth_headers)
     assert list_response.status_code == 200
     routines = list_response.json()
     assert len(routines) == 1
@@ -24,8 +25,8 @@ def test_create_and_list_routines(client, auth_headers):
 
 def test_get_routine_by_id(client, auth_headers):
     create_response = client.post(
-        "/routines/",
-        json={"name": "Pull Day", "description": "Back and biceps", "workout_ids": []},
+        "/routines",
+        json={"name": "Pull Day", "description": "Back and biceps", "workouts": []},
         headers=auth_headers,
     )
     routine_id = create_response.json()["id"]
@@ -37,18 +38,18 @@ def test_get_routine_by_id(client, auth_headers):
 
 def test_create_routine_with_workouts(client, auth_headers):
     workout_response = client.post(
-        "/workouts/",
+        "/workouts",
         json={"name": "Row", "description": "Back exercise"},
         headers=auth_headers,
     )
     workout_id = workout_response.json()["id"]
 
     routine_response = client.post(
-        "/routines/",
+        "/routines",
         json={
             "name": "Back Routine",
             "description": "Rows and pulls",
-            "workout_ids": [workout_id],
+            "workouts": [workout_id],
         },
         headers=auth_headers,
     )
@@ -57,6 +58,28 @@ def test_create_routine_with_workouts(client, auth_headers):
     assert len(routine["workouts"]) == 1
     assert routine["workouts"][0]["id"] == workout_id
     assert routine["workouts"][0]["name"] == "Row"
+    assert set(routine["workouts"][0].keys()) == {"id", "name", "description"}
+
+
+def test_create_routine_with_string_workout_ids(client, auth_headers):
+    workout_response = client.post(
+        "/workouts",
+        json={"name": "Curl", "description": "Arms"},
+        headers=auth_headers,
+    )
+    workout_id = str(workout_response.json()["id"])
+
+    routine_response = client.post(
+        "/routines",
+        json={
+            "name": "Arm Routine",
+            "description": "Curls",
+            "workouts": [workout_id],
+        },
+        headers=auth_headers,
+    )
+    assert routine_response.status_code == 201
+    assert len(routine_response.json()["workouts"]) == 1
 
 
 def test_get_routine_not_found(client, auth_headers):
@@ -67,8 +90,8 @@ def test_get_routine_not_found(client, auth_headers):
 
 def test_delete_routine(client, auth_headers):
     create_response = client.post(
-        "/routines/",
-        json={"name": "Leg Day", "description": "Squats", "workout_ids": []},
+        "/routines",
+        json={"name": "Leg Day", "description": "Squats", "workouts": []},
         headers=auth_headers,
     )
     routine_id = create_response.json()["id"]
