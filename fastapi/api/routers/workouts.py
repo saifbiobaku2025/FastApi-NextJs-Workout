@@ -34,7 +34,12 @@ def get_workout(db: db_dependency, user: user_dependency, workout_id: int):
 
 
 @router.post("", response_model=WorkoutRead, status_code=status.HTTP_201_CREATED)
-@router.post("/", response_model=WorkoutRead, status_code=status.HTTP_201_CREATED, include_in_schema=False)
+@router.post(
+    "/",
+    response_model=WorkoutRead,
+    status_code=status.HTTP_201_CREATED,
+    include_in_schema=False,
+)
 def create_workout(db: db_dependency, user: user_dependency, workout: WorkoutCreate):
     db_workout = Workout(**workout.model_dump(), user_id=user["id"])
     db.add(db_workout)

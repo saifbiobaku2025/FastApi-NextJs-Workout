@@ -1,7 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, HTTPException, status
-from sqlalchemy.orm import joinedload, Session
+from sqlalchemy.orm import Session, joinedload
 
 from api.deps import db_dependency, user_dependency
 from api.models import Routine, Workout
@@ -42,7 +42,12 @@ def get_routine(db: db_dependency, user: user_dependency, routine_id: int):
 
 
 @router.post("", response_model=RoutineRead, status_code=status.HTTP_201_CREATED)
-@router.post("/", response_model=RoutineRead, status_code=status.HTTP_201_CREATED, include_in_schema=False)
+@router.post(
+    "/",
+    response_model=RoutineRead,
+    status_code=status.HTTP_201_CREATED,
+    include_in_schema=False,
+)
 def create_routine(db: db_dependency, user: user_dependency, routine: RoutineCreate):
     db_routine = Routine(
         name=routine.name,

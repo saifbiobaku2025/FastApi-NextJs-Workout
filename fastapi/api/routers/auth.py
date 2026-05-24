@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
@@ -41,7 +42,12 @@ def create_access_token(username: str, user_id: int, expires_delta: timedelta):
 
 
 @router.post("", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-@router.post("/", response_model=UserRead, status_code=status.HTTP_201_CREATED, include_in_schema=False)
+@router.post(
+    "/",
+    response_model=UserRead,
+    status_code=status.HTTP_201_CREATED,
+    include_in_schema=False,
+)
 async def create_user(db: db_dependency, create_user_request: UserCreate):
     create_user_model = User(
         username=create_user_request.username,
