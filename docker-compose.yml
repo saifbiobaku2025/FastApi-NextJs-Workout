@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
       no_cache: true
     container_name: workout-api
+    image: saifbiobaku/workout-api:latest
     ports:
       - "8000:8000"
     env_file:
