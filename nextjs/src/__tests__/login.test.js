@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import axios from "axios";
 import AuthContext from "../app/context/AuthContext";
 import Login from "../app/login/page";
+import { API_BASE_URL } from "../lib/api";
 
 jest.mock("axios");
 
@@ -90,7 +91,7 @@ describe("Login page", () => {
     await user.click(registerForm.getByRole("button", { name: "Register" }));
 
     await waitFor(() => {
-      expect(axios.post).toHaveBeenCalledWith("http://localhost:8000/auth", {
+      expect(axios.post).toHaveBeenCalledWith(`${API_BASE_URL}/auth`, {
         username: "bob",
         password: "secret123",
       });

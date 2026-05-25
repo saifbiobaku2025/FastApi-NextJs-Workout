@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import axios from "axios";
 import AuthContext from "../app/context/AuthContext";
 import Home from "../app/page";
+import { API_BASE_URL } from "../lib/api";
 
 jest.mock("axios");
 
@@ -66,9 +67,9 @@ describe("Home page", () => {
     expect(await screen.findByText("Upper Body")).toBeInTheDocument();
     expect(screen.getByText("Push Day: Chest and triceps")).toBeInTheDocument();
     expect(axios.get).toHaveBeenCalledWith(
-      "http://localhost:8000/workouts/workouts",
+      `${API_BASE_URL}/workouts/workouts`,
     );
-    expect(axios.get).toHaveBeenCalledWith("http://localhost:8000/routines");
+    expect(axios.get).toHaveBeenCalledWith(`${API_BASE_URL}/routines`);
   });
 
   it("does not fetch data while auth is loading", () => {
@@ -102,7 +103,7 @@ describe("Home page", () => {
 
     await waitFor(() => {
       expect(axios.post).toHaveBeenCalledWith(
-        "http://localhost:8000/workouts",
+        `${API_BASE_URL}/workouts`,
         {
           name: "Leg Day",
           description: "Squats and lunges",
@@ -143,7 +144,7 @@ describe("Home page", () => {
 
     await waitFor(() => {
       expect(axios.post).toHaveBeenCalledWith(
-        "http://localhost:8000/routines",
+        `${API_BASE_URL}/routines`,
         {
           name: "Full Body",
           description: "All major lifts",

@@ -3,6 +3,7 @@
 import { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "../../lib/api";
 
 const AuthContext = createContext();
 
@@ -26,7 +27,7 @@ export const AuthProvider = ({ children }) => {
     params.append("password", password);
 
     const response = await axios.post(
-      "http://localhost:8000/auth/token",
+      `${API_BASE_URL}/auth/token`,
       params,
       {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },

@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import axios from "axios";
 import AuthContext, { AuthProvider } from "../app/context/AuthContext";
+import { API_BASE_URL } from "../lib/api";
 
 jest.mock("axios");
 
@@ -73,7 +74,7 @@ describe("AuthProvider", () => {
 
     expect(screen.getByTestId("user")).toHaveTextContent("logged-in");
     expect(axios.post).toHaveBeenCalledWith(
-      "http://localhost:8000/auth/token",
+      `${API_BASE_URL}/auth/token`,
       expect.any(URLSearchParams),
       {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
