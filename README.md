@@ -2,7 +2,7 @@
 
 FastAPI backend for the workout application.
 
-## Local development
+### Local development
 
 ```bash
 cd fastapi
@@ -15,10 +15,9 @@ npm run dev
 cd nextjs
 npm test          # run once
 npm run test:watch  # watch mode
-
 ```
 
-## Run tests locally (90% pass threshold)
+### Run tests locally (90% pass threshold)
 
 ```bash
 pip install -r requirements.txt
