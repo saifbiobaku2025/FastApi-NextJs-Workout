@@ -2,8 +2,9 @@ from typing import Annotated
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from passlib.context import CryptContext
-from jose import JWTError, jwt
+import bcrypt
+import jwt
+from jwt.exceptions import PyJWTError
 from dotenv import load_dotenv
 import os
 from .database import SessionLocal
@@ -24,7 +25,16 @@ def get_db():
 
 db_dependency = Annotated[Session, Depends(get_db)]
 
-bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(
+        plain_password.encode("utf-8"), hashed_password.encode("utf-8")
+    )
+
+
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/auth/token")
 oauth2_bearer_dependency = Annotated[str, Depends(oauth2_bearer)]
 
@@ -38,7 +48,7 @@ async def get_current_user(token: oauth2_bearer_dependency):  # ← added token 
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                 detail='Could not validate user')
         return {'username': username, 'id': user_id}
-    except JWTError:
+    except PyJWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail='Could not validate user')
 
