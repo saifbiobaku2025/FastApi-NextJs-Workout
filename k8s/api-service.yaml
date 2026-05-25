@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: workout-api
+  namespace: workout
+  labels:
+    app.kubernetes.io/name: workout-api
+    app.kubernetes.io/part-of: workout-app
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: workout-api
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http

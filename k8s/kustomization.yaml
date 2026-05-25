@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: workout
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - api-pvc.yaml
+  - api-deployment.yaml
+  - api-service.yaml
+  - web-deployment.yaml
+  - web-service.yaml
+
+secretGenerator:
+  - name: workout-api-secret
+    literals:
+      - AUTH_SECRET_KEY=local-kubernetes-dev-secret
+    options:
+      disableNameSuffixHash: true
