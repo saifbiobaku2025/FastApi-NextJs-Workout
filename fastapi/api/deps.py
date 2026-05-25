@@ -25,6 +25,7 @@ def get_db():
 
 db_dependency = Annotated[Session, Depends(get_db)]
 
+
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
