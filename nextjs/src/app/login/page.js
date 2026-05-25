@@ -3,6 +3,7 @@
 import { useContext, useState } from "react";
 import AuthContext from "../context/AuthContext";
 import axios from "axios";
+import { API_BASE_URL } from "../../config/api";
 
 const Login = () => {
   const { login } = useContext(AuthContext);
@@ -26,7 +27,7 @@ const Login = () => {
     e.preventDefault();
     setError("");
     try {
-      await axios.post("http://localhost:8000/auth", {
+      await axios.post(`${API_BASE_URL}/auth`, {
         username: registerUsername,
         password: registerPassword,
       });

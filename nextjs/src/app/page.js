@@ -4,6 +4,7 @@ import { useContext, useState, useEffect } from "react";
 import AuthContext from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import axios from "axios";
+import { API_BASE_URL } from "../config/api";
 
 const Home = () => {
   const { user, logout, isAuthLoading } = useContext(AuthContext);
@@ -23,8 +24,8 @@ const Home = () => {
     const fetchWorkoutsAndRoutines = async () => {
       try {
         const [workoutsResponse, routinesResponse] = await Promise.all([
-          axios.get("http://localhost:8000/workouts/workouts"),
-          axios.get("http://localhost:8000/routines"),
+          axios.get(`${API_BASE_URL}/workouts/workouts`),
+          axios.get(`${API_BASE_URL}/routines`),
         ]);
 
         setWorkouts(workoutsResponse.data);
@@ -40,7 +41,7 @@ const Home = () => {
   const handleCreateWorkout = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:8000/workouts", {
+      const response = await axios.post(`${API_BASE_URL}/workouts`, {
         name: workoutName,
         description: workoutDescription,
       });
@@ -55,7 +56,7 @@ const Home = () => {
   const handleCreateRoutine = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:8000/routines", {
+      const response = await axios.post(`${API_BASE_URL}/routines`, {
         name: routineName,
         description: routineDescription,
         workouts: selectedWorkouts.map(Number),
