@@ -3,7 +3,7 @@
 import { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { API_BASE_URL } from "../../lib/api";
+import { API_BASE_URL } from "../../config/api";
 
 const AuthContext = createContext();
 

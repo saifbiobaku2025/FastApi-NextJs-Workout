@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import axios from "axios";
 import AuthContext, { AuthProvider } from "../app/context/AuthContext";
-import { API_BASE_URL } from "../lib/api";
+import { API_BASE_URL } from "../config/api";
 
 jest.mock("axios");
 

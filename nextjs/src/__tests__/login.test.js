@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import axios from "axios";
 import AuthContext from "../app/context/AuthContext";
 import Login from "../app/login/page";
-import { API_BASE_URL } from "../lib/api";
+import { API_BASE_URL } from "../config/api";
 
 jest.mock("axios");
 

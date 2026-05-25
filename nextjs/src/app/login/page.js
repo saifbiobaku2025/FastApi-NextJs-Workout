@@ -3,7 +3,7 @@
 import { useContext, useState } from "react";
 import AuthContext from "../context/AuthContext";
 import axios from "axios";
-import { API_BASE_URL } from "../../lib/api";
+import { API_BASE_URL } from "../../config/api";
 
 const Login = () => {
   const { login } = useContext(AuthContext);
