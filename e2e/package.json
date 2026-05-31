@@ -1,0 +1,15 @@
+{
+  "name": "workout-e2e",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:docker": "./run-docker.sh",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.51.0"
+  }
+}

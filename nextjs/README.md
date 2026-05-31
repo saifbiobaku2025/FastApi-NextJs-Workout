@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Workout App — Next.js Frontend
 
-## Getting Started
+Next.js frontend for the workout application.
 
-First, run the development server:
+## Getting started
+
+Install dependencies and start the dev server:
 
 ```bash
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+The API must be running separately (see the root [README](../README.md)) — default API URL is `http://localhost:8000`.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Running Jest tests
 
-## Learn More
+Tests live in `src/__tests__/` and use [Jest](https://jestjs.io/) with [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/).
 
-To learn more about Next.js, take a look at the following resources:
+### Run all tests once
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+cd nextjs
+npm test
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+### Watch mode (re-runs on file changes)
 
-## Deploy on Vercel
+```bash
+npm run test:watch
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Run a single test file
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+```bash
+npm test -- src/__tests__/login.test.js
+```
+
+### Run tests matching a name
+
+```bash
+npm test -- -t "renders login form"
+```
+
+### Coverage report
+
+```bash
+npm test -- --coverage
+```
+
+### CI-style run (JUnit report + non-interactive)
+
+This matches what GitHub Actions runs on pull requests:
+
+```bash
+JEST_JUNIT_OUTPUT_FILE=jest-report.xml npm test -- --ci --reporters=default --reporters=jest-junit
+```
+
+Then enforce the 90% pass-rate gate from the repo root:
+
+```bash
+python ../.github/scripts/check_test_pass_rate.py jest-report.xml 0.90
+```
+
+## Test suites
+
+| File | Covers |
+|------|--------|
+| `src/__tests__/login.test.js` | Login page |
+| `src/__tests__/AuthContext.test.js` | Auth context provider |
+| `src/__tests__/ProtectedRoute.test.js` | Route protection |
+| `src/__tests__/page.test.js` | Home page |
+
+Configuration: `jest.config.js`, setup: `jest.setup.js`.
+
+## Other scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+
+## Docker
+
+The frontend image is built from `Dockerfile` and published as `saifbiobaku/workout-web:latest`. See the root [README](../README.md) and [k8s/README](../k8s/README.md) for deployment options.

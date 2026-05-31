@@ -1,0 +1,73 @@
+name: workout-e2e
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: workout-api-e2e
+    image: saifbiobaku/workout-api:latest
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.e2e
+    environment:
+      DATABASE_URL: sqlite:////data/workout_app.db
+      CORS_ORIGINS: "http://localhost:3000,http://frontend:3000"
+    volumes:
+      - workout_e2e_data:/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/')\"",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./nextjs
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://api:8000
+    container_name: workout-web-e2e
+    image: saifbiobaku/workout-web:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  playwright:
+    profiles: ["e2e"]
+    build:
+      context: ./e2e
+      dockerfile: Dockerfile
+    depends_on:
+      frontend:
+        condition: service_healthy
+    environment:
+      BASE_URL: http://frontend:3000
+      CI: "true"
+      E2E_DOCKER: "1"
+    volumes:
+      - ./e2e/playwright-report:/e2e/playwright-report
+      - ./e2e/test-results:/e2e/test-results
+
+volumes:
+  workout_e2e_data:

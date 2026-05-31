@@ -10,12 +10,38 @@ fastapi run api/main.py --host localhost
 
 cd nextjs
 npm run dev
-
-
-cd nextjs
-npm test          # run once
-npm run test:watch  # watch mode
 ```
+
+### Next.js tests (Jest)
+
+```bash
+cd nextjs
+npm ci
+npm test              # run all tests once
+npm run test:watch    # re-run on file changes
+```
+
+See [nextjs/README.md](nextjs/README.md) for single-file runs, coverage, and CI-style commands.
+
+### E2E tests (Playwright)
+
+**Docker mode** (no local Playwright install):
+
+```bash
+./e2e/run-docker.sh
+```
+
+**Host mode** (UI/debug/headed — requires Node):
+
+```bash
+cd e2e
+npm ci
+npx playwright install chromium
+npm test              # starts Docker Compose, runs browser tests
+npm run test:ui       # interactive UI mode (best for learning)
+```
+
+See [e2e/README.md](e2e/README.md) for Docker vs host modes, debug, and reports.
 
 ### Run tests locally (90% pass threshold)
 
