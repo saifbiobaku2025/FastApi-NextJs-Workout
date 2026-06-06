@@ -1,0 +1,19 @@
+name: Selenium E2E Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  selenium-e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Run Selenium E2E in Docker
+        run: |
+          docker compose -f docker-compose.e2e.yml --env-file .env.e2e \
+            --profile selenium run --rm --build selenium-tests
