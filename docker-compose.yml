@@ -12,8 +12,30 @@ services:
       - .env
     environment:
       DATABASE_URL: sqlite:////data/workout_app.db
+      OTEL_SERVICE_NAME: workout-api
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-lgtm:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_PYTHON_LOG_CORRELATION: "true"
+      OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED: "true"
+      LOG_LEVEL: INFO
     volumes:
       - workout_data:/data
+    depends_on:
+      - otel-lgtm
+    restart: unless-stopped
+
+  otel-lgtm:
+    image: grafana/otel-lgtm:latest
+    container_name: otel-lgtm
+    ports:
+      - "3010:3000"
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - otel_lgtm_data:/data
     restart: unless-stopped
 
   frontend:
@@ -32,3 +54,4 @@ services:
 
 volumes:
   workout_data:
+  otel_lgtm_data:

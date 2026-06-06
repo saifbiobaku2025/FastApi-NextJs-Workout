@@ -40,6 +40,10 @@ rich-toolkit==0.19.9
 rignore==0.7.6
 rsa==4.9
 sentry-sdk==2.60.0
+opentelemetry-distro==0.52b0
+opentelemetry-exporter-otlp==1.31.0
+opentelemetry-instrumentation-fastapi==0.52b0
+opentelemetry-instrumentation-logging==0.52b0
 setuptools==82.0.1
 shellingham==1.5.4
 six==1.17.0
