@@ -2,7 +2,8 @@
 """Fail CI when the pytest pass rate is below the required threshold."""
 
 import sys
-import xml.etree.ElementTree as ET
+
+from junit_summary import parse_junit_xml
 
 
 def main() -> None:
@@ -13,30 +14,19 @@ def main() -> None:
     report_path = sys.argv[1]
     min_pass_rate = float(sys.argv[2])
 
-    root = ET.parse(report_path).getroot()
+    summary = parse_junit_xml(report_path)
 
-    if root.tag == "testsuite":
-        suites = [root]
-    else:
-        suites = root.findall("testsuite")
-
-    tests = sum(int(suite.attrib.get("tests", 0)) for suite in suites)
-    failures = sum(int(suite.attrib.get("failures", 0)) for suite in suites)
-    errors = sum(int(suite.attrib.get("errors", 0)) for suite in suites)
-    skipped = sum(int(suite.attrib.get("skipped", 0)) for suite in suites)
-
-    if tests == 0:
+    if summary.tests == 0:
         print("No tests were executed.")
         sys.exit(1)
 
-    failed = failures + errors
-    passed = tests - failed - skipped
-    pass_rate = passed / tests
+    print(
+        f"Passed: {summary.passed}, Failed: {summary.failed}, "
+        f"Skipped: {summary.skipped}, Total: {summary.tests}"
+    )
+    print(f"Pass rate: {summary.pass_rate:.1%} (required: {min_pass_rate:.0%})")
 
-    print(f"Passed: {passed}, Failed: {failed}, Skipped: {skipped}, Total: {tests}")
-    print(f"Pass rate: {pass_rate:.1%} (required: {min_pass_rate:.0%})")
-
-    if pass_rate < min_pass_rate:
+    if summary.pass_rate < min_pass_rate:
         print("CI failed: pass rate is below the required threshold.")
         sys.exit(1)
 

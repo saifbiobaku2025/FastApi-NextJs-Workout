@@ -25,3 +25,12 @@ jobs:
           name: playwright-report
           path: e2e/playwright-report/
           retention-days: 7
+
+      - name: Notify Slack
+        if: always()
+        uses: ./.github/actions/slack-notify
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          suite: Playwright
+          junit-xml: e2e/playwright-report/junit.xml

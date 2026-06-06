@@ -17,3 +17,12 @@ jobs:
         run: |
           docker compose -f docker-compose.e2e.yml --env-file .env.e2e \
             --profile selenium run --rm --build selenium-tests
+
+      - name: Notify Slack
+        if: always()
+        uses: ./.github/actions/slack-notify
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          suite: Selenium
+          junit-xml: selenium/reports/junit.xml

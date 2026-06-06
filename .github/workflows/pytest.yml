@@ -28,3 +28,12 @@ jobs:
 
       - name: Enforce 90% pass rate
         run: python .github/scripts/check_test_pass_rate.py fastapi/pytest-report.xml 0.90
+
+      - name: Notify Slack
+        if: always()
+        uses: ./.github/actions/slack-notify
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          suite: Pytest
+          junit-xml: fastapi/pytest-report.xml

@@ -87,6 +87,8 @@ services:
     environment:
       BASE_URL: http://frontend:3000
       SELENIUM_REMOTE_URL: http://selenium:4444/wd/hub
+    volumes:
+      - ./selenium/reports:/app/reports
 
 volumes:
   workout_e2e_data:
