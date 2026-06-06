@@ -43,6 +43,16 @@ npm run test:ui       # interactive UI mode (best for learning)
 
 See [e2e/README.md](e2e/README.md) for Docker vs host modes, debug, and reports.
 
+### E2E tests (Selenium + pytest)
+
+Fully containerized Python Selenium tests (mirrors Playwright flows):
+
+```bash
+./selenium/run-docker.sh
+```
+
+See [selenium/README.md](selenium/README.md) for architecture, host mode, and troubleshooting.
+
 ### Run tests locally (90% pass threshold)
 
 ```bash
