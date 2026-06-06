@@ -53,6 +53,16 @@ Fully containerized Python Selenium tests (mirrors Playwright flows):
 
 See [selenium/README.md](selenium/README.md) for architecture, host mode, and troubleshooting.
 
+### Observability (logging, tracing, Grafana)
+
+```bash
+docker compose up --build
+```
+
+Open Grafana at http://localhost:3010 (`admin` / `admin`) for traces (Tempo) and logs (Loki).
+
+See [observability/README.md](observability/README.md) for architecture, Explore queries, and troubleshooting.
+
 ### Run tests locally (90% pass threshold)
 
 ```bash
