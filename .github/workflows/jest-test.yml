@@ -38,3 +38,12 @@ jobs:
 
       - name: Enforce 90% pass rate
         run: python .github/scripts/check_test_pass_rate.py nextjs/jest-report.xml 0.90
+
+      - name: Notify Slack
+        if: always()
+        uses: ./.github/actions/slack-notify
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          suite: Jest
+          junit-xml: nextjs/jest-report.xml

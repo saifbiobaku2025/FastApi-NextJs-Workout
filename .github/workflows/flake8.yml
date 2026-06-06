@@ -23,3 +23,11 @@ jobs:
 
       - name: Run flake8 on fastapi
         run: flake8 --config=flake8/.flake8 fastapi
+
+      - name: Notify Slack
+        if: always()
+        uses: ./.github/actions/slack-notify
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          suite: Flake8
