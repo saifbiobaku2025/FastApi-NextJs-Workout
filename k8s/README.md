@@ -6,6 +6,7 @@ Manifests to run the workout application on a local Kubernetes cluster (Docker D
 |----------|------------------------------------|------|
 | API      | `saifbiobaku/workout-api:latest`   | 8000 |
 | Frontend | `saifbiobaku/workout-web:latest`   | 3000 |
+| LGTM     | `grafana/otel-lgtm:latest`         | 3010 (Grafana), 4317 (OTLP) |
 
 ## Prerequisites
 
@@ -31,6 +32,7 @@ Or manually:
 
 ```bash
 kubectl apply -k k8s/
+kubectl rollout status deployment/otel-lgtm -n workout
 kubectl rollout status deployment/workout-api -n workout
 kubectl rollout status deployment/workout-web -n workout
 ```
@@ -42,14 +44,20 @@ Open the app:
 | http://localhost:3000 | Frontend |
 | http://localhost:8000 | API |
 | http://localhost:8000/docs | Swagger docs |
+| http://localhost:3010 | Grafana (`admin` / `admin`) |
+
+Wait ~30s after rollout before querying Grafana (LGTM boot time). Generate traffic with `curl http://localhost:8000/` to populate traces and logs.
 
 ## Folder layout
 
 ```
 k8s/
-├── kustomization.yaml   # Kustomize entry point (order + secret generation)
+├── kustomization.yaml   # Kustomize entry point (order + secret/config generation)
 ├── namespace.yaml       # workout namespace
-├── configmap.yaml       # AUTH_ALGORITHM, DATABASE_URL
+├── config/
+│   └── workout-api-config.env   # API + OpenTelemetry env vars (hashed ConfigMap)
+├── otel-lgtm-deployment.yaml
+├── otel-lgtm-service.yaml   # LoadBalancer :3010 (Grafana), :4317/:4318 (OTLP)
 ├── api-pvc.yaml         # PersistentVolumeClaim for SQLite data
 ├── api-deployment.yaml
 ├── api-service.yaml     # LoadBalancer :8000
@@ -61,6 +69,28 @@ k8s/
 └── examples/
     └── secret.yaml      # Template for a custom secret
 ```
+
+## Observability
+
+The API exports logs, traces, and metrics via OpenTelemetry to `grafana/otel-lgtm` (same stack as Docker Compose). LGTM uses an `emptyDir` volume for `/data` — data is lost when the pod restarts (fine for dev/demo).
+
+```
+workout-api  ──OTLP (gRPC :4317)──►  otel-lgtm
+                                         ├── Tempo   (traces)
+                                         ├── Loki    (logs)
+                                         ├── Prometheus (metrics)
+                                         └── Grafana (UI :3010)
+```
+
+| Signal | Where to view in Grafana |
+|--------|--------------------------|
+| Traces | Explore → **Tempo** → Search → `service.name = workout-api` |
+| Logs | Explore → **Loki** → `{service_name="workout-api"}` |
+| Metrics | Explore → **Prometheus** (OTel HTTP metrics) |
+
+Tempo and Loki are **not** separate Kubernetes services — they run inside the `otel-lgtm` pod and appear as Grafana datasources once the API exports OTLP successfully.
+
+See [observability/README.md](../observability/README.md) for Explore walkthroughs and troubleshooting.
 
 ## Important: use Kustomize (`-k`), not plain `-f`
 
@@ -141,10 +171,15 @@ For a standalone secret file, see `examples/secret.yaml`.
 
 ### ConfigMap
 
-Non-sensitive API settings live in `configmap.yaml`:
+Non-sensitive API settings live in [`config/workout-api-config.env`](config/workout-api-config.env). Kustomize generates a hashed ConfigMap (`workout-api-config-*`) so deployment updates trigger a pod rollout when values change.
 
 - `AUTH_ALGORITHM`: `HS256`
 - `DATABASE_URL`: `sqlite:////data/workout_app.db` (backed by the PVC)
+- OpenTelemetry variables (`OTEL_*`, `LOG_LEVEL`) — same values as [docker-compose.yml](../docker-compose.yml), with `OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-lgtm:4317`
+
+To disable telemetry export, add `OTEL_SDK_DISABLED=true` to the env file. Logs still go to stdout (`kubectl logs`).
+
+After editing the env file, run `./k8s/deploy.sh` or `kubectl apply -k k8s/` followed by `kubectl rollout restart deployment/workout-api -n workout`.
 
 ### Frontend API URL
 
@@ -154,9 +189,9 @@ The published web image is built with `NEXT_PUBLIC_API_URL=http://localhost:8000
 
 | Script | Purpose |
 |--------|---------|
-| `./k8s/deploy.sh` | Build local images on arm64 if needed, apply manifests, wait for rollouts |
+| `./k8s/deploy.sh` | Build local images on arm64 if needed, apply manifests, wait for rollouts (including otel-lgtm) |
 | `./k8s/build-local.sh` | Build `workout-api` and `workout-web` images for the local architecture |
-| `./k8s/teardown.sh` | Delete all resources in the `workout` namespace |
+| `./k8s/teardown.sh` | Delete all resources in the `workout` namespace (app + observability stack) |
 
 ## Teardown
 
@@ -179,6 +214,10 @@ kubectl delete -k k8s/
 | `Kustomization` kind not found | Applied `kustomization.yaml` with `-f` | Use `kubectl apply -k k8s/` |
 | Pod `ImagePullBackOff` | Wrong tag, private repo, or arch mismatch | `kubectl describe pod -n workout -l app.kubernetes.io/name=workout-api` |
 | Frontend can't reach API | API not ready or wrong port | Check `kubectl get svc -n workout`; API should be on `:8000` |
+| Grafana empty after deploy | LGTM still booting | Wait 30–60s after rollout, then refresh |
+| No traces in Tempo / no Loki labels | API exporting to `localhost:4317` (stale pod env) | Run `./k8s/deploy.sh`; verify `kubectl exec -n workout deployment/workout-api -- env \| grep OTEL_EXPORTER_OTLP_ENDPOINT` shows `http://otel-lgtm:4317`; check API logs for OTLP errors |
+| No traces in Tempo | OTEL misconfigured or no traffic | Generate traffic with `curl http://localhost:8000/`; wait ~30s after LGTM boot |
+| Port 3010 in use | Another service bound to 3010 | Stop conflicting process or change `otel-lgtm-service.yaml` port |
 
 Useful commands:
 
@@ -187,6 +226,7 @@ kubectl get pods,svc -n workout
 kubectl describe pod -n workout -l app.kubernetes.io/name=workout-api
 kubectl logs -n workout deployment/workout-api
 kubectl logs -n workout deployment/workout-web
+kubectl logs -n workout deployment/otel-lgtm
 ```
 
 ## Private Docker Hub images

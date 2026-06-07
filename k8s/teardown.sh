@@ -3,5 +3,5 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "Removing workout app from Kubernetes..."
+echo "Removing workout app and observability stack from Kubernetes..."
 kubectl delete -k "$ROOT" --ignore-not-found
