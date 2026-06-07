@@ -5,12 +5,22 @@ namespace: workout
 
 resources:
   - namespace.yaml
-  - configmap.yaml
+  - otel-lgtm-deployment.yaml
+  - otel-lgtm-service.yaml
   - api-pvc.yaml
   - api-deployment.yaml
   - api-service.yaml
   - web-deployment.yaml
   - web-service.yaml
+
+configMapGenerator:
+  - name: workout-api-config
+    envs:
+      - config/workout-api-config.env
+    options:
+      labels:
+        app.kubernetes.io/name: workout-api
+        app.kubernetes.io/part-of: workout-app
 
 secretGenerator:
   - name: workout-api-secret

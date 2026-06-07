@@ -20,7 +20,7 @@ workout-api  ──OTLP (gRPC :4317)──►  grafana/otel-lgtm
                                          └── Grafana (UI :3010)
 ```
 
-## Quick start
+## Quick start (Docker Compose)
 
 From the repo root:
 
@@ -41,6 +41,20 @@ curl http://localhost:8000/
 ```
 
 Wait ~30s after first start for LGTM to finish booting, then open Grafana.
+
+## Quick start (Kubernetes)
+
+From the repo root (Docker Desktop Kubernetes or k3d):
+
+```bash
+./k8s/deploy.sh
+```
+
+Same URLs as Compose — Grafana at http://localhost:3010. OTEL env vars are in [`k8s/config/workout-api-config.env`](../k8s/config/workout-api-config.env) with endpoint `http://otel-lgtm:4317`. LGTM uses an `emptyDir` volume (data lost on pod restart).
+
+Run `./k8s/deploy.sh` — it waits for LGTM, restarts the API to load ConfigMap env, and prints the OTEL endpoint from the running pod.
+
+See [k8s/README.md](../k8s/README.md) for deploy/teardown scripts, architecture, and K8s troubleshooting.
 
 ## Viewing traces
 
@@ -96,7 +110,7 @@ Run the API without exporting telemetry:
 OTEL_SDK_DISABLED=true fastapi run api/main.py --host localhost
 ```
 
-Or in Compose, set `OTEL_SDK_DISABLED=true` on the `api` service. Logs still go to stdout.
+Or in Compose, set `OTEL_SDK_DISABLED=true` on the `api` service. In Kubernetes, add the same to [`k8s/config/workout-api-config.env`](../k8s/config/workout-api-config.env). Logs still go to stdout.
 
 ## Local development (API only, no Docker)
 
@@ -124,6 +138,7 @@ opentelemetry-instrument fastapi run api/main.py --host localhost
 |---------|-----|
 | Grafana empty after start | Wait 30–60s for `otel-lgtm` to finish booting |
 | No traces in Tempo | Confirm `api` has `depends_on: otel-lgtm` and OTEL env vars; check `docker compose logs api` for OTLP errors |
+| K8s: exporting to `localhost:4317` | API pod started before ConfigMap applied | Run `./k8s/deploy.sh` or `kubectl rollout restart deployment/workout-api -n workout` |
 | Port 3010 in use | Change `"3010:3000"` in `docker-compose.yml` |
 | Frontend port conflict | LGTM Grafana is on **3010**, not 3000 (frontend keeps 3000) |
 | Logs in stdout but not Loki | Verify `OTEL_LOGS_EXPORTER=otlp`, `OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true`, and that `logging_config.py` uses `LoggingInstrumentor` (not `basicConfig(force=True)`, which strips the OTLP handler) |
@@ -132,7 +147,6 @@ opentelemetry-instrument fastapi run api/main.py --host localhost
 ## What is not covered (v1)
 
 - Next.js browser/server tracing (API only)
-- Kubernetes log shipping (use same OTEL env vars in K8s manifests as a follow-up)
 - Production alerting or retention policies (`otel-lgtm` is for dev/demo)
 
 ## References

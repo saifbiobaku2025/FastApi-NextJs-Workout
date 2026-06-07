@@ -55,13 +55,21 @@ See [selenium/README.md](selenium/README.md) for architecture, host mode, and tr
 
 ### Observability (logging, tracing, Grafana)
 
+**Docker Compose:**
+
 ```bash
 docker compose up --build
 ```
 
+**Kubernetes:**
+
+```bash
+./k8s/deploy.sh
+```
+
 Open Grafana at http://localhost:3010 (`admin` / `admin`) for traces (Tempo) and logs (Loki).
 
-See [observability/README.md](observability/README.md) for architecture, Explore queries, and troubleshooting.
+See [observability/README.md](observability/README.md) for architecture, Explore queries, and troubleshooting. Kubernetes deploy details: [k8s/README.md](k8s/README.md).
 
 ### Run tests locally (90% pass threshold)
 
